@@ -23,4 +23,8 @@ print "getting issue var\n";
 my $issue = $gh->issue;
 
 print "creating issue\n";
-my $isu = $issue->create_issue({ title => "title", body => "body" });
+my $isu = $issue->create_issue({
+	title => "title",
+	body => "body",
+	labels => [ "bug" ],
+});
