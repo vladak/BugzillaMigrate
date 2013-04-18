@@ -8,7 +8,7 @@ use XML::Simple;
 use Data::Dumper;
 use List::MoreUtils qw/ uniq /;
 
-use Net::GitHub::V2;
+use Net::GitHub::V3;
 
 my $xml_filename  = "bugzilla.xml";
 my $token_filename = "oauth_token.txt";
@@ -18,7 +18,6 @@ my $github_login = $ENV{'GITHUB_LOGIN'};
 my $github_token = $ENV{'GITHUB_TOKEN'};
 
 my $bzmigrate_url = "http://goo.gl/IYYut";
-my $tagline = "\n* Migrated from Bugzilla by BugzillaMigrate ($bzmigrate_url)\n";
 
 print("Wich Bugzilla product would you like to migrate bugs from? ");
 my $migrate_product = <STDIN>;
@@ -72,13 +71,12 @@ my $root_xml = $xml->XMLin($xml_filename,
 my @bugs = @{$root_xml->{'bug'}};
 #print Dumper(@bugs);
 
-my $github = Net::GitHub::V2->new(
-    owner => $github_owner,
-    repo => $github_repo,
-    login => $github_login,
-    token => $ENV{'GITHUB_TOKEN'},
-    throw_errors => 1
-    );
+my $gh = Net::GitHub::V3->new(
+	login => $github_login,
+	pass => $github_token,
+);
+$gh->set_default_user_repo($github_owner, $github_repo);
+my $issue = $gh->issue;
 
 foreach my $bug (@bugs)
 {
@@ -110,7 +108,6 @@ foreach my $bug (@bugs)
     my $severity = $bug->{'bug_severity'};
     my $version = $bug->{'version'};
     my $milestone = $bug->{'target_milestone'};
-
 
     # each bug has a list of long_desc for the original description
     # and each comment thereafter
@@ -144,12 +141,13 @@ foreach my $bug (@bugs)
 	$body .= "> $pretty_text\n\n";
     }
 
-    $body .= $tagline;
+    # XXX use original bugzilla ID
+    $body .= "Migrated from XXX\n";
 
 #    print ("Title: $title\n$body\n\n");
 
     {
-	#actually submit the issue to GitHub
-	my $issue = $github->issue->open($title, $body);
+	# actually submit the issue to GitHub
+	my $iss = $issue->create_issue({title => $title, body => $body});
     }
 }
