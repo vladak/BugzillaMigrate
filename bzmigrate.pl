@@ -25,12 +25,14 @@ my $progname = basename($0);
 
 my $interactive;
 my $dumper;
+my $skip_resolved;
 
 sub usage
 {
-    print "usage: $progname [-iD] [-f bugzilla_file] [-l login] [-r repo] " .
+    print "usage: $progname [-iDR] [-f bugzilla_file] [-l login] [-r repo] " .
         "[-o owner] [-p product] [-t token_file]\n" .
         "\t-D\tuse dumper\n" .
+        "\t-R\tskip RESOLVED/VERIFIED bugs\n" .
         "\t-i\tinteractive mode, uses environment variables\n" .
 	"\t-f\tXML file with Bugzilla data for one or more bugs\n" .
 	"\t-l\tGithub login (GITHUB_LOGIN)\n" .
@@ -47,8 +49,10 @@ sub usage
     exit(1);
 }
 
-our($opt_i, $opt_D, $opt_f, $opt_t, $opt_o, $opt_r, $opt_l, $opt_p, $opt_h);
-getopts('hiDf:l:r:o:p:');
+our($opt_i, $opt_R, $opt_D, $opt_f, $opt_t, $opt_o, $opt_r, $opt_l, $opt_p,
+    $opt_h);
+getopts('hiRDf:l:r:o:p:');
+$skip_resolved = $opt_R;
 $dumper = $opt_D;
 $interactive = $opt_i;
 $xml_filename = $opt_f;
@@ -143,8 +147,8 @@ foreach my $bug (@bugs)
 
     # check the status
     my $status = $bug->{'bug_status'};
-    if ($status eq "RESOLVED" ||
-	$status eq "VERIFIED") {
+    if ($skip_resolved &&
+        ($status eq "RESOLVED" || $status eq "VERIFIED")) {
 	print("Skipping bug #$id - RESOLVED/VERIFIED\n");
 	next;
     }
@@ -206,5 +210,13 @@ foreach my $bug (@bugs)
             title => $title,
             labels => @labels,
             body => $body});
+        my $issue_id = "XXX";
+        print "Bugzilla bug #$id migrated to Github Issue $issue_id\n";
+        # If the original bug was closed then close the Github issue too.
+        if ($status eq "CLOSED" || $status eq "RESOLVED") {
+            $iss->update_issue( $issue_id, {
+                state => 'closed'
+            } );
+        }
     }
 }
