@@ -119,7 +119,6 @@ my $root_xml = $xml->XMLin($xml_filename,
 			   ForceArray => ['long_desc']);
 print Dumper($root_xml) if ($dumper);
 
-# my @bugs = @{$root_xml->{'bug'}};
 my @bugs = $root_xml->{'bug'};
 print "=== Bugs:\n" . Dumper(@bugs) if ($dumper);
 
