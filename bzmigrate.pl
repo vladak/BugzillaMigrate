@@ -24,11 +24,13 @@ my $bzmigrate_url = "http://goo.gl/IYYut";
 my $progname = basename($0);
 
 my $interactive;
+my $dumper;
 
 sub usage
 {
-    print "usage: $progname [-i] [-f bugzilla_file] [-l login] [-r repo] " .
+    print "usage: $progname [-iD] [-f bugzilla_file] [-l login] [-r repo] " .
         "[-o owner] [-p product] [-t token_file]\n" .
+        "\t-D\tuse dumper\n" .
         "\t-i\tinteractive mode, uses environment variables\n" .
 	"\t-f\tXML file with Bugzilla data for one or more bugs\n" .
 	"\t-l\tGithub login (GITHUB_LOGIN)\n" .
@@ -45,8 +47,9 @@ sub usage
     exit(1);
 }
 
-our($opt_i, $opt_f, $opt_t, $opt_o, $opt_r, $opt_l, $opt_p, $opt_h);
-getopts('hif:l:r:o:p:');
+our($opt_i, $opt_D, $opt_f, $opt_t, $opt_o, $opt_r, $opt_l, $opt_p, $opt_h);
+getopts('hiDf:l:r:o:p:');
+$dumper = $opt_D;
 $interactive = $opt_i;
 $xml_filename = $opt_f;
 $token_filename = $opt_t;
@@ -97,7 +100,8 @@ if ($interactive) {
 }
 
 chomp($migrate_product);
-if (! ($github_owner &&
+if (! ($xml_filename &&
+       $github_owner &&
        $github_repo &&
        $github_login &&
        $github_token &&
@@ -109,10 +113,11 @@ if (! ($github_owner &&
 my $xml = new XML::Simple;
 my $root_xml = $xml->XMLin($xml_filename,
 			   ForceArray => ['long_desc']);
-#print Dumper($root_xml);
+print Dumper($root_xml) if ($dumper);
 
-my @bugs = @{$root_xml->{'bug'}};
-#print Dumper(@bugs);
+# my @bugs = @{$root_xml->{'bug'}};
+my @bugs = $root_xml->{'bug'};
+print "=== Bugs:\n" . Dumper(@bugs) if ($dumper);
 
 my $gh = Net::GitHub::V3->new(
 	login => $github_login,
@@ -185,12 +190,23 @@ foreach my $bug (@bugs)
     }
 
     # XXX use original bugzilla ID
-    $body .= "Migrated from XXX\n";
+    # $body .= "Migrated from XXX\n";
+
+    #
+    my @labels = ();
+    if ($severity eq "enhancement") {
+        push (@labels,  $severity);
+    } else {
+        push (@labels,  "bug");
+    }
 
 #    print ("Title: $title\n$body\n\n");
 
     {
 	# actually submit the issue to GitHub
-	my $iss = $issue->create_issue({title => $title, body => $body});
+	my $iss = $issue->create_issue({
+            title => $title,
+            labels => @labels,
+            body => $body});
     }
 }
