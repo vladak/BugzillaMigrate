@@ -45,9 +45,8 @@ sub usage
     exit(1);
 }
 
-my %opts;
 our($opt_i, $opt_f, $opt_t, $opt_o, $opt_r, $opt_l, $opt_p, $opt_h);
-getopt('hif:l:r:o:p:', \%opts);
+getopts('hif:l:r:o:p:');
 $interactive = $opt_i;
 $xml_filename = $opt_f;
 $token_filename = $opt_t;
