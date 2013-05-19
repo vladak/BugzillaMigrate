@@ -2,6 +2,8 @@
 
 use strict;
 
+use File::Basename;
+use Getopt::Std;
 use File::Slurp;
 
 use XML::Simple;
@@ -16,51 +18,93 @@ my $github_owner = $ENV{'GITHUB_OWNER'};
 my $github_repo = $ENV{'GITHUB_REPO'};
 my $github_login = $ENV{'GITHUB_LOGIN'};
 my $github_token = $ENV{'GITHUB_TOKEN'};
+my $migrate_product;
 
 my $bzmigrate_url = "http://goo.gl/IYYut";
+my $progname = basename($0);
 
-print("Wich Bugzilla product would you like to migrate bugs from? ");
-my $migrate_product = <STDIN>;
+my $interactive;
+
+sub usage
+{
+    print "usage: $progname [-i] [-f bugzilla_file] [-l login] [-r repo] " .
+        "[-o owner] [-p product] [-t token_file]\n" .
+        "\t-i\tinteractive mode, uses environment variables\n" .
+	"\t-f\tXML file with Bugzilla data for one or more bugs\n" .
+	"\t-l\tGithub login (GITHUB_LOGIN)\n" .
+	"\t-r\tGithub repo (GITHUB_REPO)\n" .
+	"\t-o\tGithub owner (GITHUB_OWNER)\n" .
+	"\t-p\tProduct to migrate\n" .
+	"\t-t\tAuthentication token file (GITHUB_TOKEN)\n\n";
+    print "You must enter all required GitHub information:\n" .
+        "\tproduct to migrate\n" .
+        "\tGithub login\n" .
+        "\tGithub repo\n" .
+        "\tGithub token\n" .
+        "\tGithub repo owner\n";
+    exit(1);
+}
+
+my %opts;
+our($opt_i, $opt_f, $opt_t, $opt_o, $opt_r, $opt_l, $opt_p, $opt_h);
+getopt('hif:l:r:o:p:', \%opts);
+$interactive = $opt_i;
+$xml_filename = $opt_f;
+$token_filename = $opt_t;
+$github_owner = $opt_o;
+$github_repo = $opt_r;
+$github_login = $opt_l;
+$migrate_product = $opt_p;
+usage() if ($opt_h);
+
+if ($interactive) {
+    if (! $migrate_product) {
+        print("Wich Bugzilla product would you like to migrate bugs from? ");
+        $migrate_product = <STDIN>;
+    }
+     
+    if (! $github_owner )
+    {
+        print("Enter the owner of the GitHub repo you want to add " .
+    	    "issues to.\n");
+        print("GitHub owner: ");
+        $github_owner = <STDIN>;
+        chomp($github_owner);
+    }
+    
+    if (! $github_repo )
+    {
+        print("Enter the name of the repository you want to add issues to.\n");
+        print("GitHub repo: https://github.com/$github_owner/");
+        $github_repo = <STDIN>;
+        chomp($github_repo);
+    }
+    
+    if (! $github_login )
+    {
+        print("Enter your GitHub user name: ");
+        $github_login = <STDIN>;
+        chomp($github_login);
+    }
+    
+    if (! $github_token )
+    {
+        eval { $github_token = read_file($token_filename); }
+    }
+    if (! $github_token ) {
+        print("Enter your GitHub API token: ");
+        $github_token = <STDIN>;
+    }
+}
+
 chomp($migrate_product);
-
-if (! $github_owner )
-{
-    print ("Enter the owner of the GitHub repo you want to add issues to.\n");
-    print ("GitHub owner: ");
-    $github_owner = <STDIN>;
-    chomp($github_owner);
-}
-
-if (! $github_repo )
-{
-    print ("Enter the name of the repository you want to add issues to.\n");
-    print ("GitHub repo: https://github.com/$github_owner/");
-    $github_repo = <STDIN>;
-    chomp($github_repo);
-}
-
-if (! $github_login )
-{
-    print ("Enter your GitHub user name: ");
-    $github_login = <STDIN>;
-    chomp($github_login);
-}
-
-if (! $github_token )
-{
-    eval { $github_token = read_file($token_filename); }
-}
-if (! $github_token ) {
-    print ("Enter your GitHub API token: ");
-    $github_token = <STDIN>;
-}
-
 if (! ($github_owner &&
        $github_repo &&
        $github_login &&
-       $github_token) )
+       $github_token &&
+       $migrate_product) )
 {
-    die("You must enter all required GitHub information.");
+    usage();
 }
 
 my $xml = new XML::Simple;
@@ -97,7 +141,7 @@ foreach my $bug (@bugs)
     my $status = $bug->{'bug_status'};
     if ($status eq "RESOLVED" ||
 	$status eq "VERIFIED") {
-	print ("Skipping bug #$id - RESOLVED/VERIFIED\n");
+	print("Skipping bug #$id - RESOLVED/VERIFIED\n");
 	next;
     }
 
