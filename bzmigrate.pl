@@ -128,7 +128,7 @@ my $issue = $gh->issue;
 
 foreach my $bug (@bugs)
 {
-#    print Dumper($bug);
+    print "=== One bug:\n" . Dumper($bug) if ($dumper);
 
     # get the bug ID
     my $id = $bug->{'bug_id'};
