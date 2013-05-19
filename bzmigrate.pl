@@ -140,7 +140,7 @@ foreach my $bug (@bugs)
 	print ("Skipping bug #$id - wrong product (\"$product\")\n");
 	next;
     }
-    
+
     # check the status
     my $status = $bug->{'bug_status'};
     if ($status eq "RESOLVED" ||
@@ -150,7 +150,7 @@ foreach my $bug (@bugs)
     }
 
     my $title = "$bug->{'short_desc'} (Bugzilla #$id)";
-    
+
     my $component = $bug->{'component'};
     my $platform = $bug->{'rep_platform'};
     my $severity = $bug->{'bug_severity'};
@@ -159,9 +159,10 @@ foreach my $bug (@bugs)
 
     # each bug has a list of long_desc for the original description
     # and each comment thereafter
-    my $body .= "*$severity* in component *$component* for *$milestone*\n";
-    $body .= "Reported in version *$version* on *$platform*\n\n";
-    
+    my $body .= "severity *$severity* in component *$component* " .
+        "for *$milestone*\n";
+    $body .= "Reported in version *$version* on platform *$platform*\n\n";
+
     my $comment;
     foreach my $desc (@{$bug->{'long_desc'}} )
     {
@@ -189,10 +190,7 @@ foreach my $bug (@bugs)
 	$body .= "> $pretty_text\n\n";
     }
 
-    # XXX use original bugzilla ID
-    # $body .= "Migrated from XXX\n";
-
-    #
+    # add labels
     my @labels = ();
     if ($severity eq "enhancement") {
         push (@labels,  $severity);
