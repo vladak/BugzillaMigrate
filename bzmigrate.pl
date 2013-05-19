@@ -160,12 +160,17 @@ foreach my $bug (@bugs)
     my $severity = $bug->{'bug_severity'};
     my $version = $bug->{'version'};
     my $milestone = $bug->{'target_milestone'};
+    my $assigned_to = $bug->{'assigned_to'}{'name'};
 
     # each bug has a list of long_desc for the original description
     # and each comment thereafter
-    my $body .= "severity *$severity* in component *$component* " .
+    my $body = "status $status " .
+        "severity *$severity* " .
+        "in component *$component* " .
         "for *$milestone*\n";
-    $body .= "Reported in version *$version* on platform *$platform*\n\n";
+    $body .= "Reported in version *$version* on platform *$platform*\n";
+    $body .= "Assigned to: $assigned_to\n";
+    $body .= "\n";
 
     my $comment;
     foreach my $desc (@{$bug->{'long_desc'}} )
