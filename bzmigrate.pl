@@ -233,7 +233,9 @@ foreach my $bug (@bugs)
     }
 
     foreach my $attachment (@{$bug->{'attachment'}}) {
-        print "  attachment " . $attachment->{'filename'} . "\n";
+        # Suppress warnings for wide characters.
+        binmode STDOUT, ":encoding(UTF-8)";
+        print "  attachment \"" . $attachment->{'filename'} . "\"\n";
             "(ID " . $attachment->{'attachid'} . ")\n";
     }
 }
