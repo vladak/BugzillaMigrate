@@ -26,12 +26,14 @@ my $progname = basename($0);
 my $interactive;
 my $dumper;
 my $skip_resolved;
+my $dry;
 
 sub usage
 {
-    print "usage: $progname [-iDR] [-f bugzilla_file] [-l login] [-r repo] " .
+    print "usage: $progname [-niDR] [-f bugzilla_file] [-l login] [-r repo] " .
         "[-o owner] [-p product] [-t token_file]\n" .
         "\t-D\tuse dumper\n" .
+        "\t-n\tdry run\n" .
         "\t-R\tskip RESOLVED/VERIFIED bugs\n" .
         "\t-i\tinteractive mode, uses environment variables\n" .
 	"\t-f\tXML file with Bugzilla data for one or more bugs\n" .
@@ -50,8 +52,8 @@ sub usage
 }
 
 our($opt_i, $opt_R, $opt_D, $opt_f, $opt_t, $opt_o, $opt_r, $opt_l, $opt_p,
-    $opt_h);
-getopts('hiRDf:l:r:o:p:');
+    $opt_h, $opt_n);
+getopts('hniRDf:l:r:o:p:');
 $skip_resolved = $opt_R;
 $dumper = $opt_D;
 $interactive = $opt_i;
@@ -61,6 +63,7 @@ $github_owner = $opt_o;
 $github_repo = $opt_r;
 $github_login = $opt_l;
 $migrate_product = $opt_p;
+$dry = $opt_n;
 usage() if ($opt_h);
 
 if ($interactive) {
@@ -116,7 +119,7 @@ if (! ($xml_filename &&
 
 my $xml = new XML::Simple;
 my $root_xml = $xml->XMLin($xml_filename,
-			   ForceArray => ['long_desc']);
+			   ForceArray => ['long_desc', 'attachment']);
 print Dumper($root_xml) if ($dumper);
 
 my @bugs = $root_xml->{'bug'};
@@ -172,7 +175,7 @@ foreach my $bug (@bugs)
     $body .= "\n";
 
     my $comment;
-    foreach my $desc (@{$bug->{'long_desc'}} )
+    foreach my $desc (@{$bug->{'long_desc'}})
     {
 	# do the 'from' line of the message quote
 	$body .= "On $desc->{'bug_when'}, $desc->{'who'}{'name'} wrote";
@@ -208,7 +211,7 @@ foreach my $bug (@bugs)
 
 #    print ("Title: $title\n$body\n\n");
 
-    {
+    if (!$dry) {
 	# actually submit the issue to GitHub
 	my $iss = $issue->create_issue({
             title => $title,
@@ -225,5 +228,12 @@ foreach my $bug (@bugs)
             print " (closed)";
         }
         print "\n";
+    } else {
+        print "Bugzilla bug #$id\n";
+    }
+
+    foreach my $attachment (@{$bug->{'attachment'}}) {
+        print "  attachment " . $attachment->{'filename'} . "\n";
+            "(ID " . $attachment->{'attachid'} . ")\n";
     }
 }
