@@ -214,13 +214,16 @@ foreach my $bug (@bugs)
             title => $title,
             labels => @labels,
             body => $body});
-        my $issue_id = "XXX";
-        print "Bugzilla bug #$id migrated to Github Issue $issue_id\n";
+        my $issue_id = $iss->{number};
+        print "Bugzilla bug #$id migrated to Github Issue $issue_id";
+
         # If the original bug was closed then close the Github issue too.
         if ($status eq "CLOSED" || $status eq "RESOLVED") {
-            $iss->update_issue( $issue_id, {
+            $issue->update_issue( $issue_id, {
                 state => 'closed'
             } );
+            print " (closed)";
         }
+        print "\n";
     }
 }
