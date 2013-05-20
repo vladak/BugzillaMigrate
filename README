@@ -11,3 +11,6 @@ will contain the full specification of all bugs shown.
 
 The script inputs values from environment variables and/or command line options.
 If run with -i option, it can also prompt for the values interactively.
+
+Note that Github Issues API does not currently allow attaching files
+programatically so the script at least prints its IDs and filenames.
