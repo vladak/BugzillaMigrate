@@ -14,3 +14,5 @@ If run with -i option, it can also prompt for the values interactively.
 
 Note that Github Issues API does not currently allow attaching files
 programatically so the script at least prints its IDs and filenames.
+
+The script assumes that the repo has labels "bug" and "enhancement".
