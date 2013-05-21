@@ -134,10 +134,12 @@ my $issue = $gh->issue;
 
 foreach my $bug (@bugs)
 {
-    print "=== One bug:\n" . Dumper($bug) if ($dumper);
-
     # get the bug ID
     my $id = $bug->{'bug_id'};
+    print "migrating " if (!dry);
+    print "Bugzilla bug #$id\n";
+
+    print "=== bug #$id dump:\n" . Dumper($bug) . "===\n" if ($dumper);
 
     # check the product
     my $product = $bug->{'product'};
@@ -241,8 +243,6 @@ foreach my $bug (@bugs)
             print " (closed)";
         }
         print "\n";
-    } else {
-        print "Bugzilla bug #$id\n";
     }
 
     foreach my $attachment (@{$bug->{'attachment'}}) {
