@@ -156,6 +156,7 @@ foreach my $bug (@bugs)
     }
 
     my $title = "$bug->{'short_desc'} (Bugzilla #$id)";
+    $title =~ s/^RFE: //; # strip the Bugzilla RFE prefix
 
     my $component = $bug->{'component'};
     my $platform = $bug->{'rep_platform'};
