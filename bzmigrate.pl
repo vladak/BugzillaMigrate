@@ -136,7 +136,7 @@ foreach my $bug (@bugs)
 {
     # get the bug ID
     my $id = $bug->{'bug_id'};
-    print "migrating " if (!dry);
+    print "migrating " if (!$dry);
     print "Bugzilla bug #$id\n";
 
     print "=== bug #$id dump:\n" . Dumper($bug) . "===\n" if ($dumper);
@@ -189,8 +189,13 @@ foreach my $bug (@bugs)
     my $comment;
     foreach my $desc (@{$bug->{'long_desc'}})
     {
+        # Some names can be in Unicode, convert them to prevent HTTP::Message 
+        # from croaking. Other fields should probably receive similar treatment.
+        my $name = $desc->{'who'}{'name'};
+	utf8::encode($name) if (utf8::is_utf8($name));
+
 	# do the 'from' line of the message quote
-	$body .= "On $desc->{'bug_when'}, $desc->{'who'}{'name'} wrote";
+	$body .= "On $desc->{'bug_when'}, $name wrote";
 	if (UNIVERSAL::isa( $desc->{'thetext'}, "HASH" ))
 	{
 #	    print ("no keys in p_t\n");
