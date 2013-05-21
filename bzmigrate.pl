@@ -174,7 +174,7 @@ foreach my $bug (@bugs)
     $body .= "Assigned to: $assigned_to\n";
     $body .= "\n";
 
-    if (scalar(@{$bug->{'attachment'}}) > 0) {
+    if (defined (@{$bug->{'attachment'}})) {
         $body .= "Original attachment names and IDs:\n";
         foreach my $attachment (@{$bug->{'attachment'}}) {
             $body .= "- _" . $attachment->{'filename'} . "_" .
@@ -202,6 +202,9 @@ foreach my $bug (@bugs)
 #	$pretty_text =~ s/^\s+//g; # strip leading whitespace
 #	$pretty_text =~ s/\s+$//g; # strip trailing whitespace
 	$pretty_text =~ s/\n/\n> /g; # quote everything by one more level
+
+        # prevent # followed by numbers to be interpreted as Issue links
+        $pretty_text =~ s/#(\d+)/# \1/g;
 
 	# mark up any full git refs as linkable
 	$pretty_text =~ s/([0-9a-fA-F]{40})/SHA: $1/g;
