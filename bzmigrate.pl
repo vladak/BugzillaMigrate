@@ -174,6 +174,15 @@ foreach my $bug (@bugs)
     $body .= "Assigned to: $assigned_to\n";
     $body .= "\n";
 
+    if (scalar(@{$bug->{'attachment'}}) > 0) {
+        $body .= "Original attachment names and IDs:\n";
+        foreach my $attachment (@{$bug->{'attachment'}}) {
+            $body .= "- _" . $attachment->{'filename'} . "_" .
+                " (ID " . $attachment->{'attachid'} . ")\n";
+        }
+        $body .= "\n";
+    }
+
     my $comment;
     foreach my $desc (@{$bug->{'long_desc'}})
     {
@@ -235,7 +244,7 @@ foreach my $bug (@bugs)
     foreach my $attachment (@{$bug->{'attachment'}}) {
         # Suppress warnings for wide characters.
         binmode STDOUT, ":encoding(UTF-8)";
-        print "  attachment \"" . $attachment->{'filename'} . "\"\n";
-            "(ID " . $attachment->{'attachid'} . ")\n";
+        print "  attachment \"" . $attachment->{'filename'} . "\"" .
+            " (ID " . $attachment->{'attachid'} . ")\n";
     }
 }
