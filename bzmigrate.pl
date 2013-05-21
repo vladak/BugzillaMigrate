@@ -180,7 +180,9 @@ foreach my $bug (@bugs)
     if (defined (@{$bug->{'attachment'}})) {
         $body .= "Original attachment names and IDs:\n";
         foreach my $attachment (@{$bug->{'attachment'}}) {
-            $body .= "- _" . $attachment->{'filename'} . "_" .
+            my $filename = $attachment->{'filename'};
+            utf8::encode($filename) if (utf8::is_utf8($filename));
+            $body .= "- _" . $filename . "_" .
                 " (ID " . $attachment->{'attachid'} . ")\n";
         }
         $body .= "\n";
