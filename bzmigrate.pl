@@ -219,6 +219,8 @@ foreach my $bug (@bugs)
 	# mark up any full git refs as linkable
 	$pretty_text =~ s/([0-9a-fA-F]{40})/SHA: $1/g;
 
+        utf8::encode($pretty_text) if (utf8::is_utf8($pretty_text));
+
 	$comment++;
 	$body .= "> $pretty_text\n\n";
     }
